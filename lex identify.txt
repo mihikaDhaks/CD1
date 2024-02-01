@@ -1,0 +1,27 @@
+%{
+#include<stdio.h>
+%}
+
+%%
+int|const|final|break|else|while|for|if|do {printf("%s is a keyword\n", yytext);}
+[a-zA-Z]+ {printf("%s is a word\n", yytext);}
+[0-9]+ {printf("%s is a number\n", yytext);}
+[(),{}]+ {printf("%s is parenthesis\n", yytext);}
+#include<stdio.h> {printf("%s is a header file\n", yytext);}
+. {printf("%s is not an identifier\n", yytext);}
+%%
+
+int main() {
+    printf("Enter a string\n");
+    yylex();
+    return 0;
+}
+
+int yywrap() {
+    return 1;
+}
+
+//touch lexcode.l
+// flex lexcode.l
+// gcc lex.yy.c
+//./a.out

@@ -1,0 +1,114 @@
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+typedef enum {
+    KEYWORD,
+    IDENTIFIER,
+    CONSTANT,
+    OPERATOR,
+    DELIMITER,
+    STRING_LITERAL,
+    END_OF_FILE
+} TokenType;
+
+void printToken(TokenType type, const char *lexeme) {
+    const char *typeStrings[] = {
+        "KEYWORD",
+        "IDENTIFIER",
+        "CONSTANT",
+        "OPERATOR",
+        "DELIMITER",
+        "STRING_LITERAL",
+        "END_OF_FILE"
+    };
+
+    printf("Type: %s, Lexeme: %s\n", typeStrings[type], lexeme);
+}
+
+int isKeyword(char *word) {
+    char keywords[9][10] = {"int", "struct", "return", "if", "else", "for", "printf", "sizeof", "include"};
+
+    for (int i = 0; i < 9; i++) {
+        if (strcmp(word, keywords[i]) == 0) {
+            return 1; // It's a keyword
+        }
+    }
+
+    return 0; // It's not a keyword
+}
+
+int isOperator(char *word) {
+    char operators[7][4] = {"+", "-", "*", "/", "%", "==", "="};
+
+    for (int i = 0; i < 7; i++) {
+        if (strcmp(word, operators[i]) == 0) {
+            return 1; // It's an operator
+        }
+    }
+
+    return 0; // It's not an operator
+}
+
+int isDelimiter(char *word) {
+    char delimiters[8][2] = {"{", "}", "(", ")", "[", "]", ";", ","};
+
+    for (int i = 0; i < 8; i++) {
+        if (strcmp(word, delimiters[i]) == 0) {
+            return 1; // It's a delimiter
+        }
+    }
+
+    return 0; // It's not a delimiter
+}
+
+int main() {
+    FILE *file = fopen("input.c", "r");
+    if (file == NULL) {
+        fprintf(stderr, "Unable to open file\n");
+        return 1;
+    }
+
+    char input[5000];
+    size_t bytesRead = fread(input, 1, sizeof(input) - 1, file);
+    input[bytesRead] = '\0';
+
+    char *token = strtok(input, " \t\n()+-*/%=[]{};,<>");
+    
+    while (token != NULL) {
+        if (isKeyword(token)) {
+            printToken(KEYWORD, token);
+        } else if (isdigit(token[0])) {
+            printToken(CONSTANT, token);
+        } else if (isOperator(token)) {
+            printToken(OPERATOR, token);
+        } else if (isDelimiter(token)) {
+            printToken(DELIMITER, token);
+        } else if (strncmp(token, "#include", 8) == 0) {
+            printToken(KEYWORD, "include");
+            // Handle the header file separately
+            token = strtok(NULL, "\"<>");
+            printToken(STRING_LITERAL, token);
+            token = strtok(NULL, " \t\n()+-*/%=[]{};,<>");
+            continue; // Skip the rest of the loop
+        } else if (token[0] == '\"') {
+            printToken(STRING_LITERAL, token);
+        } else {
+            printToken(IDENTIFIER, token);
+        }
+
+        token = strtok(NULL, " \t\n()+-*/%=[]{};,<>");
+    }
+
+    printToken(END_OF_FILE, "");
+
+    fclose(file);
+
+    return 0;
+}
+
+//touch cprog.c
+//touch input.c
+//gcc cprog.c
+//gcc input.c
+///a.out
